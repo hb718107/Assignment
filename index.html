@@ -2,10 +2,127 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASSIGNMENT</title>
+    <title>Tweet System</title>
+    <link rel="stylesheet" href="main.css">
 </head>
 <body>
-    
+    <div class="container">
+        <h2>Offline Tweet System</h2>
+
+        <!-- User Info -->
+        <div id="userInfo">
+            <p id="welcomeMessage"></p>
+            <button id="logoutBtn">Logout</button>
+        </div>
+
+        <!-- Post Tweet -->
+        <div id="postTweetSection">
+            <textarea id="tweetContent" placeholder="Write your tweet..." rows="3" cols="50"></textarea>
+            <br>
+            <button id="postTweetBtn">Post Tweet</button>
+        </div>
+
+        <!-- User Filter -->
+        <div id="filterSection">
+            <label for="userFilter">Filter tweets by user:</label>
+            <select id="userFilter">
+                <option value="all">All Users</option>
+            </select>
+        </div>
+
+        <h3>Tweets</h3>
+        <ul id="tweetList"></ul>
+    </div>
+
+    <script type="module">
+        import { User, AuthStatus, Tweet, TweetSystem } from './dist/app.js';
+
+        const users = [
+            new User(1, 'Zuhaib', 'Zuhaib@example.com', '1234', AuthStatus.LOGGED_OUT),
+            new User(2, 'Hussain', 'Hussain@example.com', 'abcd', AuthStatus.LOGGED_OUT)
+        ];
+
+        // Check if user is logged in
+        const loggedInUserId = sessionStorage.getItem('loggedInUserId');
+        let loggedInUser = users.find(u => u.id.toString() === loggedInUserId);
+
+        if (!loggedInUser) {
+            alert('Please login first!');
+            window.location.href = 'login.html';
+        } else {
+            loggedInUser.authStatus = AuthStatus.LOGGED_IN;
+        }
+
+        // DOM
+        const welcomeMessage = document.getElementById('welcomeMessage');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const tweetList = document.getElementById('tweetList');
+        const postTweetBtn = document.getElementById('postTweetBtn');
+        const tweetContent = document.getElementById('tweetContent');
+        const userFilter = document.getElementById('userFilter');
+
+        welcomeMessage.textContent = `Welcome, ${loggedInUser.getUsername()}!`;
+
+        logoutBtn.addEventListener('click', () => {
+            loggedInUser.logout();
+            sessionStorage.removeItem('loggedInUserId');
+            window.location.href = 'login.html';
+        });
+
+        const tweetSystem = new TweetSystem();
+
+        
+        users.forEach(user => {
+            const option = document.createElement('option');
+            option.value = user.id.toString();
+            option.textContent = user.getUsername();
+            userFilter.appendChild(option);
+        });
+
+        // Render tweets
+        function renderTweets(filterUserId = 'all') {
+            tweetList.innerHTML = '';
+            let tweetsToRender = tweetSystem.getAllTweets();
+
+            if (filterUserId !== 'all') {
+                tweetsToRender = tweetsToRender.filter(tweet => tweet.author.id.toString() === filterUserId);
+            }
+
+            tweetsToRender.forEach(tweet => {
+                const li = document.createElement('li');
+                li.textContent = tweet.displayTweet();
+
+                
+                if (tweet.author.id === loggedInUser.id) {
+                    const delBtn = document.createElement('button');
+                    delBtn.textContent = 'Delete';
+                    delBtn.addEventListener('click', () => {
+                        tweetSystem.deleteTweet(tweet.id, loggedInUser);
+                        renderTweets(userFilter.value);
+                    });
+                    li.appendChild(delBtn);
+                }
+
+                tweetList.appendChild(li);
+            });
+        }
+
+        
+        postTweetBtn.addEventListener('click', () => {
+            const content = tweetContent.value.trim();
+            if (!content) return;
+            tweetSystem.postTweet(content, loggedInUser);
+            tweetContent.value = '';
+            renderTweets(userFilter.value);
+        });
+
+        // Filter tweets by user
+        userFilter.addEventListener('change', () => {
+            renderTweets(userFilter.value);
+        });
+
+        // Initial render
+        renderTweets();
+    </script>
 </body>
 </html>

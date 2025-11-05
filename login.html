@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+    <div class="login-container">
+        <h2>Login</h2>
+        <form id="loginForm">
+            <label for="email">Email:</label>
+            <input type="email" id="email" required>
+            <br>
+            <label for="password">Password:</label>
+            <input type="password" id="password" required>
+            <br>
+            <button type="submit">Login</button>
+        </form>
+        <p id="loginMessage"></p>
+    </div>
+
+    <script type="module">
+        import { User, AuthStatus } from './dist/app.js';
+
+        const users = [
+            new User(1, 'Zuhaib', 'Zuhaib@example.com', '1234', AuthStatus.LOGGED_OUT),
+            new User(2, 'Hussain', 'Hussain@example.com', 'abcd', AuthStatus.LOGGED_OUT)
+        ];
+
+        const loginForm = document.getElementById('loginForm');
+        const loginMessage = document.getElementById('loginMessage');
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const emailInput = document.getElementById('email').value;
+            const passwordInput = document.getElementById('password').value;
+
+            const user = users.find(u => u.email === emailInput);
+
+            if (user && user.login(passwordInput)) {
+                // Save logged-in user to sessionStorage
+                sessionStorage.setItem('loggedInUserId', user.id.toString());
+
+                // Redirect to main page
+                window.location.href = 'index.html';
+            } else {
+                loginMessage.textContent = 'Incorrect email or password!';
+            }
+        });
+    </script>
+</body>
+</html>
