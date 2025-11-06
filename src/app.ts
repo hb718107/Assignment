@@ -4,7 +4,18 @@
     LOGGED_IN,
     LOGGED_OUT
 }
- export class User {
+export interface IUser {
+  id: number;
+  username: string;
+  email: string;
+  password: Password;
+  authStatus: AuthStatus;
+  getUsername(): string;
+  login(password: Password): boolean;
+  logout(): void;
+}
+
+ export class User implements IUser {
     constructor(
         public id : number, 
         public username : string, 
